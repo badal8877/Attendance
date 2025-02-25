@@ -1,0 +1,461 @@
+ <!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employee Master</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .form-container, .data-container {
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, select {
+      padding: 8px;
+      width: 300px;
+      max-width: 100%;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    .edit-btn, .delete-btn {
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .edit-btn {
+      color: blue;
+    }
+    .edit-btn:hover {
+      text-decoration: underline;
+    }
+    .delete-btn {
+      color: red;
+    }
+    .delete-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Employee Master</h1>
+
+  <div class="form-container">
+    <h2>Add / Edit Employee</h2>
+    <form id="employeeForm">
+      <input type="hidden" id="empIndex" value="-1" />
+      
+      <label for="company">Company:</label>
+      <input type="text" id="company" required />
+
+      <label for="office">Office:</label>
+      <input type="text" id="office" required />
+
+      <label for="department">Department:</label>
+      <select id="department" required>
+        <option value="">Select Department</option>
+        <option value="HR">HR</option>
+        <option value="IT">IT</option>
+        <option value="Finance">Finance</option>
+      </select>
+
+      <label for="designation">Designation:</label>
+      <input type="text" id="designation" required />
+
+      <label for="oldEmpId">Old Employee ID:</label>
+      <input type="text" id="oldEmpId" required />
+
+      <label for="newEmpId">New Employee ID:</label>
+      <input type="text" id="newEmpId" required />
+
+      <label for="name">Name:</label>
+      <input type="text" id="name" required />
+
+      <label for="attendanceId">Attendance ID:</label>
+      <input type="text" id="attendanceId" required />
+
+      <button type="submit">Save Employee</button>
+    </form>
+  </div>
+
+  <div class="data-container">
+    <h2>Employee List</h2>
+    <table id="empTable">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Office</th>
+          <th>Department</th>
+          <th>Designation</th>
+          <th>Old Employee ID</th>
+          <th>New Employee ID</th>
+          <th>Name</th>
+          <th>Attendance ID</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data rows will be dynamically added here 
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let employees = JSON.parse(localStorage.getItem('employees')) || [];
+
+    const employeeForm = document.getElementById('employeeForm');
+    const company = document.getElementById('company');
+    const office = document.getElementById('office');
+    const department = document.getElementById('department');
+    const designation = document.getElementById('designation');
+    const oldEmpId = document.getElementById('oldEmpId');
+    const newEmpId = document.getElementById('newEmpId');
+    const name = document.getElementById('name');
+    const attendanceId = document.getElementById('attendanceId');
+    const empIndex = document.getElementById('empIndex');
+    const empTableBody = document.getElementById('empTable').querySelector('tbody');
+
+    employeeForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const empData = {
+        company: company.value.trim(),
+        office: office.value.trim(),
+        department: department.value,
+        designation: designation.value.trim(),
+        oldEmpId: oldEmpId.value.trim(),
+        newEmpId: newEmpId.value.trim(),
+        name: name.value.trim(),
+        attendanceId: attendanceId.value.trim(),
+      };
+
+      const index = parseInt(empIndex.value, 10);
+
+      if (index === -1) {
+        employees.push(empData);
+      } else {
+        employees[index] = empData;
+      }
+
+      saveDataLocally();
+      renderTable();
+      employeeForm.reset();
+      empIndex.value = -1;
+    });
+
+    function renderTable() {
+      empTableBody.innerHTML = '';
+
+      employees.forEach((emp, i) => {
+        const row = document.createElement('tr');
+
+        Object.values(emp).forEach(value => {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+
+        const actionCell = document.createElement('td');
+        
+        const editButton = document.createElement('span');
+        editButton.textContent = 'Edit';
+        editButton.classList.add('edit-btn');
+        editButton.addEventListener('click', () => loadEmployeeIntoForm(i));
+
+        const deleteButton = document.createElement('span');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete-btn');
+        deleteButton.addEventListener('click', () => deleteEmployee(i));
+
+        actionCell.appendChild(editButton);
+        actionCell.appendChild(document.createTextNode(' | '));
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        empTableBody.appendChild(row);
+      });
+    }
+
+    function loadEmployeeIntoForm(index) {
+      const emp = employees[index];
+      company.value = emp.company;
+      office.value = emp.office;
+      department.value = emp.department;
+      designation.value = emp.designation;
+      oldEmpId.value = emp.oldEmpId;
+      newEmpId.value = emp.newEmpId;
+      name.value = emp.name;
+      attendanceId.value = emp.attendanceId;
+      empIndex.value = index;
+    }
+
+    function deleteEmployee(index) {
+      if (confirm("Are you sure you want to delete this employee?")) {
+        employees.splice(index, 1);
+        saveDataLocally();
+        renderTable();
+      }
+    }
+
+    function saveDataLocally() {
+      localStorage.setItem('employees', JSON.stringify(employees));
+    }
+
+    window.onload = renderTable;
+  </script>
+</body>
+</html> 
+
+ -->
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employee Master</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .form-container, .data-container {
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px; /* Space between fields */
+    }
+    input, select {
+      padding: 8px;
+      width: 100%; /* Full width */
+      max-width: 200px; /* Limit max width */
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    .edit-btn, .delete-btn {
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .edit-btn {
+      color: blue;
+    }
+    .edit-btn:hover {
+      text-decoration: underline;
+    }
+    .delete-btn {
+      color: red;
+    }
+    .delete-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>Employee Master</h1>
+
+  <div class="form-container">
+    <h2>Add / Edit Employee</h2>
+    <form id="employeeForm">
+      <input type="hidden" id="empIndex" value="-1" />
+      
+      <div class="form-row">
+        <label for="company">Company:</label>
+        <input type="text" id="company" required />
+
+        <label for="office">Office:</label>
+        <input type="text" id="office" required />
+
+        <label for="department">Department:</label>
+        <select id="department" required>
+          <option value="">Select Department</option>
+          <option value="HR">HR</option>
+          <option value="IT">IT</option>
+          <option value="Finance">Finance</option>
+        </select>
+
+        <label for="designation">Designation:</label>
+        <input type="text" id="designation" required />
+
+        <label for="oldEmpId">Old Employee ID:</label>
+        <input type="text" id="oldEmpId" required />
+
+        <label for="newEmpId">New Employee ID:</label>
+        <input type="text" id="newEmpId" required />
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" required />
+
+        <label for="attendanceId">Attendance ID:</label>
+        <input type="text" id="attendanceId" required />
+      </div>
+
+      <button type="submit">Save Employee</button>
+    </form>
+  </div>
+
+  <div class="data-container">
+    <h2>Employee List</h2>
+    <table id="empTable">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Office</th>
+          <th>Department</th>
+          <th>Designation</th>
+          <th>Old Employee ID</th>
+          <th>New Employee ID</th>
+          <th>Name</th>
+          <th>Attendance ID</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Data rows will be dynamically added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let employees = JSON.parse(localStorage.getItem('employees')) || [];
+
+    const employeeForm = document.getElementById('employeeForm');
+    const company = document.getElementById('company');
+    const office = document.getElementById('office');
+    const department = document.getElementById('department');
+    const designation = document.getElementById('designation');
+    const oldEmpId = document.getElementById('oldEmpId');
+    const newEmpId = document.getElementById('newEmpId');
+    const name = document.getElementById('name');
+    const attendanceId = document.getElementById('attendanceId');
+    const empIndex = document.getElementById('empIndex');
+    const empTableBody = document.getElementById('empTable').querySelector('tbody');
+
+    employeeForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const empData = {
+        company: company.value.trim(),
+        office: office.value.trim(),
+        department: department.value,
+        designation: designation.value.trim(),
+        oldEmpId: oldEmpId.value.trim(),
+        newEmpId: newEmpId.value.trim(),
+        name: name.value.trim(),
+        attendanceId: attendanceId.value.trim(),
+      };
+
+      const index = parseInt(empIndex.value, 10);
+
+      if (index === -1) {
+        employees.push(empData);
+      } else {
+        employees[index] = empData;
+      }
+
+      saveDataLocally();
+      renderTable();
+      employeeForm.reset();
+      empIndex.value = -1;
+    });
+
+    function renderTable() {
+      empTableBody.innerHTML = '';
+
+      employees.forEach((emp, i) => {
+        const row = document.createElement('tr');
+
+        Object.values(emp).forEach(value => {
+          const cell = document.createElement('td');
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+
+        const actionCell = document.createElement('td');
+        
+        const editButton = document.createElement('span');
+        editButton.textContent = 'Edit';
+        editButton.classList.add('edit-btn');
+        editButton.addEventListener('click', () => loadEmployeeIntoForm(i));
+
+        const deleteButton = document.createElement('span');
+        deleteButton.textContent = 'Delete';
+        deleteButton.classList.add('delete-btn');
+        deleteButton.addEventListener('click', () => deleteEmployee(i));
+
+        actionCell.appendChild(editButton);
+        actionCell.appendChild(document.createTextNode(' | '));
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        empTableBody.appendChild(row);
+      });
+    }
+
+    function loadEmployeeIntoForm(index) {
+      const emp = employees[index];
+      company.value = emp.company;
+      office.value = emp.office;
+      department.value = emp.department;
+      designation.value = emp.designation;
+      oldEmpId.value = emp.oldEmpId;
+      newEmpId.value = emp.newEmpId;
+      name.value = emp.name;
+      attendanceId.value = emp.attendanceId;
+      empIndex.value = index;
+    }
+
+    function deleteEmployee(index) {
+      if (confirm("Are you sure you want to delete this employee?")) {
+        employees.splice(index, 1);
+        saveDataLocally();
+        renderTable();
+        employeeForm.reset(); // Reset the form fields after deletion
+        empIndex.value = -1; // Reset the index to allow adding new entries
+      }
+    }
+
+    function saveDataLocally() {
+      localStorage.setItem('employees', JSON.stringify(employees));
+    }
+
+    window.onload = renderTable;
+  </script>
+</body>
+</html> 

@@ -38,13 +38,13 @@ function createMainWindow() {
           label: 'Designation Master',
           click: () => {
             // You can add functionality here to open a new window or load content in mainWindow
-            mainWindow.webContents.send('menu-selection', 'designation');
+            mainWindow.loadFile('designation.html');
           }
         },
         {
           label: 'Employ Master',
           click: () => {
-            mainWindow.webContents.send('menu-selection', 'employ');
+            mainWindow.loadFile('employee.html');
           }
         },
         {
